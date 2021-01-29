@@ -1,4 +1,13 @@
 {
   "name": "@wauzig/voca-bau-node-services",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "Runs VoCA-Bau node services",
+  "license": "MIT",
+  "repository": "wauzig73/voca-bau-node-services",
+  "main": "index.js",
+  "keywords": [
+    "voca",
+    "voca-bau",
+    "node-services"
+  ]  
 }
