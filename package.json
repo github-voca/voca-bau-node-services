@@ -3,11 +3,22 @@
   "version": "1.0.0",
   "description": "Runs VoCA-Bau node services",
   "license": "MIT",
-  "repository": "wauzig73/voca-bau-node-services",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wauzig73/voca-bau-node-services.git"
+  },
   "main": "index.js",
   "keywords": [
     "voca",
     "voca-bau",
     "node-services"
-  ]  
+  ],
+  "bugs": {
+    "url": "https://github.com/wauzig73/voca-bau-node-services/issues"
+  },
+  "homepage": "https://github.com/wauzig73/voca-bau-node-services#readme",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "VoCA"
 }
