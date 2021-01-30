@@ -1,0 +1,4 @@
+*.log
+*.json
+!_*.json
+/node_modules

@@ -1,13 +1,13 @@
 {
   "name": "@wauzig/voca-bau-node-services",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Runs VoCA-Bau node services",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wauzig73/voca-bau-node-services.git"
   },
-  "main": "index.js",
+  "main": "service.js",
   "keywords": [
     "voca",
     "voca-bau",
@@ -18,7 +18,19 @@
   },
   "homepage": "https://github.com/wauzig73/voca-bau-node-services#readme",
   "scripts": {
+    "install": "node service.js install",
+    "uninstall": "node service.js uninstall",
+    "start": "node service.js start",
+    "stop": "node service.js stop",
+    "restart": "node service.js restart",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "VoCA"
+  "author": "VoCA",
+  "dependencies": {
+    "@ladjs/graceful": "^1.0.5",
+    "bree": "^4.1.1",
+    "node-windows": "^1.0.0-beta.5",
+    "winston": "^3.3.3",
+    "yargs": "^16.2.0"
+  }
 }
