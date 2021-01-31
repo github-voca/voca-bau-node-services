@@ -1,4 +1,5 @@
 *.log
 *.json
 !_*.json
+!package*.json
 /node_modules
