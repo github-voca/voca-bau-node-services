@@ -48,7 +48,7 @@ var fs = require('fs');
 var svc_config_filename = argv.svc_config_file || './service.json';
 if (!fs.existsSync(svc_config_filename)) {
   yargs.showHelp();
-  return;
+  return 0;
 }
 
 var svc_config = require(svc_config_filename);
@@ -73,3 +73,4 @@ else if (argv._.includes('restart')) {
 else {
   yargs.showHelp();
 }
+return 0;
