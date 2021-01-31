@@ -1,6 +1,6 @@
 {
   "name": "@wauzig/voca-bau-node-services",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Runs VoCA-Bau node services",
   "license": "MIT",
   "repository": {
