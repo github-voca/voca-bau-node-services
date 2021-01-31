@@ -62,19 +62,19 @@ var Service = require('node-windows').Service;
 var svc = new Service(svc_config);
 
 if (argv._.includes('install')) {
- if (!svc.exists) svc.install();
+  svc.install();
 }
 else if (argv._.includes('uninstall')) {
- if (svc.exists) svc.uninstall();
+  svc.uninstall();
 }
 else if (argv._.includes('start')) {
- if (svc.exists) svc.start();
+  svc.start();
 }
 else if (argv._.includes('stop')) {
- if (svc.exists) svc.stop();
+  svc.stop();
 }
 else if (argv._.includes('restart')) {
- if (svc.exists) svc.restart();
+  svc.restart();
 }
 else {
   yargs.showHelp();
