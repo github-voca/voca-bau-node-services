@@ -8,9 +8,7 @@
     "url": "git+https://github.com/wauzig73/voca-bau-node-services.git"
   },
   "main": "service.js",
-  "bin": {
-    "voca-bau-node-services": "service.js"
-  },
+  "bin": "./service.js",
   "keywords": [
     "voca",
     "voca-bau",
