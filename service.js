@@ -5,23 +5,26 @@
  */
 
 const yargs = require('yargs');
+const fs = require('fs');
+const path = require('path');
+const dir = path.dirname(fs.realpathSync(__filename));
 
 const argv = yargs
- .command('install', 'Install the VoCA-Bau node service', {
-   svc_config_file: {
-     description: 'the service config filename',
-     alias: 'f',
-     type: 'string'
-   }
- })
- .command('uninstall', 'Uninstall the VoCA-Bau node service', {
-   svc_config_file: {
-     description: 'the service config filename',
-     alias: 'f',
-     type: 'string'
-   }
- })
- .command('start', 'Start the VoCA-Bau node service', {
+.command('install', 'Install the VoCA-Bau node service', {
+  svc_config_file: {
+    description: 'the service config filename',
+    alias: 'f',
+    type: 'string'
+  }
+})
+.command('uninstall', 'Uninstall the VoCA-Bau node service', {
+  svc_config_file: {
+    description: 'the service config filename',
+    alias: 'f',
+    type: 'string'
+  }
+})
+.command('start', 'Start the VoCA-Bau node service', {
   svc_config_file: {
     description: 'the service config filename',
     alias: 'f',
@@ -43,11 +46,11 @@ const argv = yargs
   }
 })
 .help()
- .alias('help', 'h')
- .argv;
+.alias('help', 'h')
+.epilog(`current config file directory is ${dir}`)
+.argv;
 
-var fs = require('fs');
-var svc_config_filename = argv.svc_config_file || './service.json';
+var svc_config_filename = argv.svc_config_file || path.join(dir, '/service.json');
 if (!fs.existsSync(svc_config_filename)) {
   var svc_default_config = require('./_service.json');
   svc_default_config.workingDirectory = process.cwd();
