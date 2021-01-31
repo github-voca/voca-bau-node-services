@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * VoCA-Bau node services
  */
@@ -74,4 +76,5 @@ else if (argv._.includes('restart')) {
 else {
   yargs.showHelp();
 }
-return 0;
+
+module.exports = svc;
