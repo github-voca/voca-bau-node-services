@@ -1,5 +1,3 @@
 *.log
-*.json
-!_*.json
-!package*.json
+service.json
 /node_modules

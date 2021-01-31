@@ -1,0 +1,9 @@
+{
+  "log_file": "logs/server.log",
+  "jobs": [
+    {
+      "name": "test",
+      "interval": "10s"
+    }
+  ]
+}
