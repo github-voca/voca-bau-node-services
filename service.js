@@ -47,8 +47,9 @@ const argv = yargs
 var fs = require('fs');
 var svc_config_filename = argv.svc_config_file || './service.json';
 if (!fs.existsSync(svc_config_filename)) {
-  yargs.showHelp();
-  return 0;
+  var svc_default_config = require('./_service.json');
+  svc_default_config.workingDirectory = process.cwd();
+  fs.writeFileSync(svc_config_filename, JSON.stringify(svc_default_config, null, 2));
 }
 
 var svc_config = require(svc_config_filename);
