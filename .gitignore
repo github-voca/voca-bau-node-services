@@ -1,5 +1,6 @@
 *.log
 *.json
+!_*.json
 !package*.json
 /daemon
 /logs
