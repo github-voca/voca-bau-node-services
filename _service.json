@@ -2,6 +2,6 @@
   "name": "VoCA Bau node services",
   "description": "Windows service to manage VoCA-Bau application",
   "script": "server.js",
-  "scriptOptions": "-f ./service.json",
-  "workingDirectory": "C:\\<path to install directory>\\"
+  "scriptOptions": "-c server.json",
+  "workingDirectory": "<automatically_defined_on_install>"
 }

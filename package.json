@@ -30,8 +30,11 @@
   "dependencies": {
     "@ladjs/graceful": "^1.0.5",
     "bree": "^4.1.1",
+    "http": "0.0.1-security",
+    "lodash": "^4.17.20",
     "node-windows": "^1.0.0-beta.5",
     "winston": "^3.3.3",
+    "xml2js": "^0.4.23",
     "yargs": "^16.2.0"
   }
 }

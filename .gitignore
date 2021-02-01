@@ -1,3 +1,6 @@
 *.log
-service.json
+*.json
+!package*.json
+/daemon
+/logs
 /node_modules
