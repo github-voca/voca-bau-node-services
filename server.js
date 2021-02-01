@@ -32,11 +32,6 @@ if (!fs.existsSync(srv_config_filename)) {
   fs.writeFileSync(srv_config_filename, JSON.stringify(srv_default_config, null, 2));
 }
 
-fs.writeFileSync('c:\\temp\\npm-test\\config.json', JSON.stringify({
-  'srv_config_filename': srv_config_filename,
-  'dir': dir
-}, null, 2));
-
 const srv_config = require(srv_config_filename);
 
 var log_file = srv_config.logFile || argv.logFile;
