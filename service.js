@@ -33,15 +33,8 @@ if (!path.isAbsolute(svc_config_filename)) {
   svc_config_filename = path.join(dir, svc_config_filename);
 }
 if (!fs.existsSync(svc_config_filename)) {
-  const home = path.join(require('os').homedir(), '.voca-bau-node-services');
-
-  process.chdir(home);
-  if (!fs.existsSync(home)) {
-    fs.mkdirSync(home, { recursive: true });
-  }
-  
   var svc_default_config = require('./_service.json');
-  svc_default_config.workingDirectory = home;
+  svc_default_config.workingDirectory = dir;
   fs.writeFileSync(svc_config_filename, JSON.stringify(svc_default_config, null, 2));
 }
 
