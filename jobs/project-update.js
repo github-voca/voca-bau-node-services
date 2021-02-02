@@ -159,7 +159,7 @@ let main = async function() {
     projects = projects_response.root;
 
     logger.log('debug', 'create helper functions...');
-    let defaultCustomer = customers.find(customer => customer.catchall == '1');
+    let defaultCustomer = customers.find(customer => customer.type == '1');
 
     let getCustomerByName = function(name) {
       let customer = customers.find(customer => name.match(new RegExp('^' + customer.name, 'i')));
