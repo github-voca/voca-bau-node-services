@@ -162,10 +162,9 @@ let main = async function() {
     let defaultCustomer = customers.find(customer => customer.catchall == '1');
 
     let getCustomerByName = function(name) {
-      let check = name.toLowerCase();
-      let customer = customers.find(customer => check.startsWith(customer.name.toLowerCase()));
+      let customer = customers.find(customer => name.match(new RegExp('^' + customer.name, 'i')));
       if (customer) {
-        name = name.substr(customer.name.length).match(/^[^\w]*(.*)$/)[1];
+        name = name.match(new RegExp('^' + customer.name + '[^\\w]*(.*)$', 'i'))[1];
       }
       else {
         customer = defaultCustomer;
