@@ -6,51 +6,32 @@
 
 const fs = require('fs');
 const path = require('path');
-const dir = path.dirname(fs.realpathSync(__filename));
-
 const yargs = require('yargs');
+const Configstore = require('configstore');
+const Service = require('node-windows').Service;
+
+const dir = path.dirname(fs.realpathSync(__filename));
+process.chdir(dir); // otherwise node-services/deamon-folder will be created in current directory!
+
+const config = new Configstore('voca-bau-node-services');
+if (!config.get('service')) {
+  config.all = require('./default-config.json');
+  config.set('service.workingDirectory', dir);
+}
+
 const argv = yargs
 .command('install', 'Install the VoCA-Bau node service')
 .command('uninstall', 'Uninstall the VoCA-Bau node service')
 .command('start', 'Start the VoCA-Bau node service')
 .command('stop', 'Stop the VoCA-Bau node service')
 .command('restart', 'Restart the VoCA-Bau node service')
-.options({
-  configFile: {
-    alias: 'c',
-    type: 'string',
-    default: 'service.json',
-    description: 'the service config filename'
-  },
-  default: {
-    alias: 'd',
-    type: 'boolean',
-    description: 'create default config file'
-  }
-})
 .help()
 .alias('help', 'h')
-.epilog(`current config file directory is ${dir}`)
+.epilog(`Service directory is ${dir}`)
+.epilog(`Config file is ${config.path}`)
 .argv;
 
-var svc_config_filename = argv.configFile;
-if (!path.isAbsolute(svc_config_filename)) {
-  svc_config_filename = path.join(dir, svc_config_filename);
-}
-if (!fs.existsSync(svc_config_filename)) {
-  if (!argv.default) {
-    yargs.showHelp();
-    return;
-  }
-  var svc_default_config = require('./_service.json');
-  svc_default_config.workingDirectory = dir;
-  fs.writeFileSync(svc_config_filename, JSON.stringify(svc_default_config, null, 2));
-}
-
-const svc_config = require(svc_config_filename);
-
-var Service = require('node-windows').Service;
-var svc = new Service(svc_config);
+let svc = new Service(config.get('service'));
 
 if (argv._.includes('install')) {
   svc.install();

@@ -1,47 +1,31 @@
 const fs = require('fs');
 const path = require('path');
+const yargs = require('yargs');
+const Configstore = require('configstore');
+const http = require('http');
 const _ = require('lodash');
 const xml2js = require('xml2js');
 const querystring = require('querystring');
+const { createLogger, format, transports } = require('winston');
+require('winston-daily-rotate-file');
 
 const dir = path.dirname(fs.realpathSync(__filename));
-const argv = require('yargs')
-.options({
-  'logFile': {
-    alias: 'l',
-    type: 'string',
-    default: 'project-update.log',
-    description: 'log file name'
-  },
-  'projectsDir': {
-    alias: 'p',
-    type: 'string',
-    description: 'projects directory'
-  },
-  'url': {
-    alias: 'u',
-    type: 'string',
-    description: 'database url (e.g. http://<username>:<password>@<domain>'
-  },
-  'verbose': {
-    alias: 'v',
-    type: 'boolean',
-    descritpion: 'generate verbose log file output'
-  },
-  'debug': {
-    alias: 'd',
-    type: 'boolean',
-    descritpion: 'generate debug log file output'
-  }
+const argv = yargs
+.command('* <jobs-config-name>', 'start project-update job', (yargs) => {
+  yargs.positional('jobs-config-name', {
+    describe: 'config name in jobs section for project-update',
+    type: 'string'
+  })
 })
+.help()
 .argv;
 
-var log_file = argv.logFile;
-if (!path.isAbsolute(log_file)) {
-  log_file = path.join(dir, log_file);
+const config = new Configstore('voca-bau-node-services');
+if (!config.get(`jobs.${argv.jobsConfigName}`)) {
+  yargs.showHelp();
+  return;
 }
 
-const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
@@ -52,14 +36,11 @@ const logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.File({
-      filename: log_file,
-      level: argv.debug ? 'debug' : argv.verbose ? 'verbose' : 'info'
-    })
+    new transports.DailyRotateFile({...config.get('server.logger'), ...config.get(`jobs.${argv.jobsConfigName}.logger`) })
   ]
 });
 
-var projectsDir = argv.projectsDir;
+var projectsDir = config.get(`jobs.${argv.jobsConfigName}.projectsDir`);
 if (!path.isAbsolute(projectsDir)) {
   projectsDir = path.join(dir, projectsDir);
 }
@@ -68,7 +49,7 @@ if (!fs.existsSync(projectsDir)) {
   return;
 }
 
-let base_url = argv.url;
+let base_url = config.get(`jobs.${argv.jobsConfigName}.url`);
 if (!base_url) {
   logger.error(`database url does not exist: ${base_url}`);
   return;
@@ -86,7 +67,6 @@ const merge_params = function(a, b) {
 };
 
 // HTTP request promise
-const http = require('http');
 const http_request = function(path, method = null, params = null) {
   let http_url = new URL(path, base_url);
   let http_query = querystring.stringify(_.mergeWith(
@@ -303,7 +283,7 @@ let main = async function() {
       logger.info(`project-update: ${pinsert} new projects, ${pupdate} changed projects and ${pdelete} finished projects`);
     }
     else {
-      logger.log('verbose', 'all project files up-to-date!');
+      logger.info('project-update: all project files up-to-date!');
     }
   }
   catch (error) {

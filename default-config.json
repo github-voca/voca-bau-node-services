@@ -1,0 +1,38 @@
+{
+  "service": {
+    "name": "VoCA Bau node services",
+    "description": "Windows service to manage VoCA-Bau application",
+    "script": "server.js",
+    "scriptOptions": "-c server.json",
+    "workingDirectory": "<automatically_defined_on_install>"
+  },
+  "server": {
+    "logger": {
+      "level": "info",
+      "dirname": "<path_to_log_files>",
+      "filename": "server-%DATE%.log",
+      "maxFiles": "14d"
+    },
+    "jobs": [
+      {
+        "name": "project-update",
+        "cron": "* * * * *",
+        "worker": {
+          "argv": [
+            "project-update-config"
+          ]
+        }
+      }
+    ]
+  },
+	"jobs": {
+		"project-update-config": {
+			"logger": {
+        "level": "debug",
+				"filename": "project-update-%DATE%.log"
+      },
+      "projectsDir": "<path_to_plv_and onlv_files>",
+      "url": "http://<host_username>:<host_password>@<host_domain>"
+		}
+	}
+}

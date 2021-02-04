@@ -1,7 +1,4 @@
 *.log
-*.json
-!_*.json
-!package*.json
 /daemon
 /logs
 /node_modules
