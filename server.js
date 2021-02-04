@@ -18,6 +18,11 @@ if (!config.get('server')) {
   return;
 }
 
+let config_logger = config.get('server.logger');
+if (!path.isAbsolute(config_logger.dirname)) {
+  config_logger.dirname = path.join(dir, config_logger.dirname);
+}
+
 const { combine, timestamp, label, printf } = format;
 const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;
@@ -28,7 +33,7 @@ const logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.DailyRotateFile(config.get('server.logger'))
+    new transports.DailyRotateFile(config_logger)
   ]
 });
 
