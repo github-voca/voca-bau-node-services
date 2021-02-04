@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const dir = path.dirname(fs.realpathSync(__filename));
 const _ = require('lodash');
 const xml2js = require('xml2js');
 const querystring = require('querystring');
 
+const dir = path.dirname(fs.realpathSync(__filename));
 const argv = require('yargs')
 .options({
   'logFile': {
@@ -68,43 +68,61 @@ if (!fs.existsSync(projectsDir)) {
   return;
 }
 
-var url = argv.url;
-if (!url) {
-  logger.error(`database url does not exist: ${url}`);
+let base_url = argv.url;
+if (!base_url) {
+  logger.error(`database url does not exist: ${base_url}`);
   return;
 }
 else {
-  url = new URL(url);
+  base_url = new URL(base_url);
 }
+let base_params = querystring.parse(base_url.search.substr(1))
 
-var http_options = {
-  protocol: url.protocol,
-  host: url.host
-}
-if (url.port) http_options.port = url.port;
-if (url.username && url.password) http_options.auth = url.username + ':' + url.password;
+// merge params customizer for arrays
+const merge_params = function(a, b) {
+  if (_.isArray(a)) {
+    return a.concat(b);
+  }
+};
 
+// HTTP request promise
 const http = require('http');
-const http_request = function(path, method, params) {
-  let options = { ...http_options };
+const http_request = function(path, method = null, params = null) {
+  let http_url = new URL(path, base_url);
+  let http_query = querystring.stringify(_.mergeWith(
+      params,
+      base_params,
+      querystring.parse(http_url.search.substr(1)
+    ), merge_params)) || null;
   let post_data = null;
 
-  if (path) options.path = path;
-  if (method) options.method = method;
-  if (params) {
-    if (method == 'GET') {
-      options.path = path + '?' + querystring.stringify(params);
+  if (http_query) {
+    if (!method || (method == 'GET')) {
+      http_url.search = '?' + http_query;
     }
     else {
-      post_data = querystring.stringify(params);
-      if (!options.headers) options.headers = {};
-      options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      options.headers['Content-Length'] = Buffer.byteLength(post_data);
+      post_data = http_query;
     }
   }
 
+  let http_options = {
+    protocol: http_url.protocol,
+    host: http_url.hostname,
+    path: http_url.pathname + http_url.search
+  }
+
+  if (http_url.port) http_options.port = http_url.port;
+  if (http_url.username && http_url.password) http_options.auth = http_url.username + ':' + http_url.password;
+  if (method) http_options.method = method;
+  if (post_data) {
+    http_options.headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': Buffer.byteLength(post_data)
+    };
+  }
+
   return new Promise((resolve, reject) => {
-    let request = http.request(options, (response) => {
+    let request = http.request(http_options, (response) => {
       const { statusCode } = response;
       const contentType = response.headers['content-type'];
     
@@ -152,8 +170,8 @@ let main = async function() {
   try {
     logger.log('verbose', 'load customers and projects from database...');
     let [ customers_response, projects_response ] = await Promise.all([
-      http_request('/php/db.php/customers'),
-      http_request('/php/db.php/projects')
+      http_request('php/db.php/customers'),
+      http_request('php/db.php/projects')
     ]);
     customers = customers_response.root;
     projects = projects_response.root;
@@ -205,7 +223,23 @@ let main = async function() {
       let parser = new xml2js.Parser();
       let result = await parser.parseStringPromise(content);
 
-      let { customer, name } = getCustomerByName((result['onlv']['ausschreibungs-lv'][0]['kenndaten'][0]['vorhaben'] || []).join());
+      let onlv = Object.keys(result).find(key => key.match(/^.*onlv$/i));
+      if (!onlv) throw new Error(`ONLV-file ${file} has no valid onlv-tag`);
+      let onlv_lv = Object.keys(result[onlv]).find(key => key.match(/^.*\-lv$/i));
+      if (!onlv_lv) throw new Error(`ONLV-file ${file} has no valid ...-lv-tag`);
+      let onlv_kenndaten = Object.keys(result[onlv][onlv_lv][0]).find(key => key.match(/^.*kenndaten$/i));
+      if (!onlv_kenndaten) throw new Error(`ONLV-file ${file} has no valid kenndaten-tag`);
+
+      let onlv_vorhaben = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*vorhaben$/i));
+      onlv_vorhaben = onlv_vorhaben ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_vorhaben].join() : file;
+
+      let onlv_lvbezeichnung = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvbezeichnung$/i));
+      onlv_lvbezeichnung = onlv_lvbezeichnung ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvbezeichnung].join() : '';
+
+      let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
+      onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
+
+      let { customer, name } = getCustomerByName(onlv_vorhaben);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
       return {
@@ -215,9 +249,9 @@ let main = async function() {
         filename: file,
         filesize: '' + stats.size,
         filedate: filedate[1] + ' ' + filedate[2],
-        description: '',
-        address: '',
-        type: (result['onlv']['ausschreibungs-lv'][0]['kenndaten'][0]['lvcode'] || []).join()
+        description: onlv_lvbezeichnung,
+        address: onlv_vorhaben,
+        type: onlv_lvcode
       }
     };
 
@@ -226,20 +260,24 @@ let main = async function() {
     let checkedONLV = await Promise.all(filesONLV.map(file => checkONLV(file)));
 
     logger.log('debug', 'update projects...');
+    let pinsert = pupdate = pdelete = 0;
     let requests = [];
     let checked = checkedPLV.concat(checkedONLV);
     checked.forEach(params => {
-      let project = projects.find(project => project.filename == params.filename);
-
+      let project = projects ? projects.find(project => project.filename == params.filename) : null;
       let method = null;
 
       if (project) {
         params.id = project.id;
-        if (!_.isEqual(project, params)) method = 'PUT';
+        if (!_.isEqual(project, params)) {
+          method = 'PUT';
+          pupdate++;
+        }
         project.exists = true;
       }
       else {
         method = 'POST';
+        pinsert++;
       }
 
       if (method) {
@@ -255,12 +293,18 @@ let main = async function() {
           method: 'DELETE',
           params: project
         })
+        pdelete++;
       }
     });
     
-    let responses = await Promise.all(requests.map(request => http_request('/php/db.php/projects', request.method, request.params)));
+    let responses = await Promise.all(requests.map(request => http_request('php/db.php/projects', request.method, request.params)));
 
-    logger.info('all project files up-to-date!');
+    if (pinsert || pupdate || pdelete) {
+      logger.info(`project-update: ${pinsert} new projects, ${pupdate} changed projects and ${pdelete} finished projects`);
+    }
+    else {
+      logger.log('verbose', 'all project files up-to-date!');
+    }
   }
   catch (error) {
     logger.error(error.message);

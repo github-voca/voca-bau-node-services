@@ -21,6 +21,11 @@ const argv = yargs
     type: 'string',
     default: 'service.json',
     description: 'the service config filename'
+  },
+  default: {
+    alias: 'd',
+    type: 'boolean',
+    description: 'create default config file'
   }
 })
 .help()
@@ -33,6 +38,10 @@ if (!path.isAbsolute(svc_config_filename)) {
   svc_config_filename = path.join(dir, svc_config_filename);
 }
 if (!fs.existsSync(svc_config_filename)) {
+  if (!argv.default) {
+    yargs.showHelp();
+    return;
+  }
   var svc_default_config = require('./_service.json');
   svc_default_config.workingDirectory = dir;
   fs.writeFileSync(svc_config_filename, JSON.stringify(svc_default_config, null, 2));
