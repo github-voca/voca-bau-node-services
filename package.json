@@ -30,7 +30,8 @@
   "dependencies": {
     "@ladjs/graceful": "^1.0.5",
     "bree": "^4.1.1",
-    "configstore": "^5.0.1",
+    "child_process": "^1.0.2",
+    "conf": "^9.0.0",
     "http": "0.0.1-security",
     "lodash": "^4.17.20",
     "node-windows": "^1.0.0-beta.5",

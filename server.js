@@ -4,23 +4,24 @@
 
 const fs = require('fs');
 const path = require('path');
-const Configstore = require('configstore');
+const Conf = require('conf');
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
 const Graceful = require('@ladjs/graceful');
 const Bree = require('bree');
 
-const dir = path.dirname(fs.realpathSync(__filename));
-process.chdir(dir); // otherwise node-services/deamon-folder will be created in current directory!
-
-const config = new Configstore('voca-bau-node-services');
+const config = new Conf({
+  cwd: '/voca-bau-node-services',
+  watch: true
+});
 if (!config.get('server')) {
   return;
 }
+process.chdir(config.get('service.workingDirectory'));
 
-let config_logger = config.get('server.logger');
-if (!path.isAbsolute(config_logger.dirname)) {
-  config_logger.dirname = path.join(dir, config_logger.dirname);
+let server_logger = config.get('server.logger');
+if (!path.isAbsolute(server_logger.dirname)) {
+  server_logger.dirname = path.join(path.dirname(config.path), server_logger.dirname);
 }
 
 const { combine, timestamp, label, printf } = format;
@@ -33,7 +34,7 @@ const logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.DailyRotateFile(config_logger)
+    new transports.DailyRotateFile(server_logger)
   ]
 });
 

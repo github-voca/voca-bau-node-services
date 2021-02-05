@@ -7,19 +7,11 @@
 const fs = require('fs');
 const path = require('path');
 const yargs = require('yargs');
-const Configstore = require('configstore');
-const Service = require('node-windows').Service;
-
-const dir = path.dirname(fs.realpathSync(__filename));
-process.chdir(dir); // otherwise node-services/deamon-folder will be created in current directory!
-
-const config = new Configstore('voca-bau-node-services');
-if (!config.get('service')) {
-  config.all = require('./default-config.json');
-  config.set('service.workingDirectory', dir);
-}
+const Conf = require('conf');
+const { Service, EventLogger } = require('node-windows');
 
 const argv = yargs
+.scriptName('voca-bau-node-services')
 .command('install', 'Install the VoCA-Bau node service')
 .command('uninstall', 'Uninstall the VoCA-Bau node service')
 .command('start', 'Start the VoCA-Bau node service')
@@ -27,9 +19,15 @@ const argv = yargs
 .command('restart', 'Restart the VoCA-Bau node service')
 .help()
 .alias('help', 'h')
-.epilog(`Service directory is ${dir}`)
-.epilog(`Config file is ${config.path}`)
 .argv;
+
+const config = new Conf({
+  cwd: '/voca-bau-node-services',
+  defaults: require('./default-config.json'),
+  watch: true
+});
+config.set('service.workingDirectory', path.dirname(fs.realpathSync(__filename)));
+process.chdir(config.get('service.workingDirectory'));
 
 let svc = new Service(config.get('service'));
 

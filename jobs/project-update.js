@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const yargs = require('yargs');
-const Configstore = require('configstore');
+const Conf = require('conf');
 const http = require('http');
 const _ = require('lodash');
 const xml2js = require('xml2js');
@@ -9,22 +8,25 @@ const querystring = require('querystring');
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
 
-const dir = path.dirname(fs.realpathSync(__filename));
-const argv = yargs
-.command('* <jobs-config-name>', 'start project-update job', (yargs) => {
-  yargs.positional('jobs-config-name', {
-    describe: 'config name in jobs section for project-update',
-    type: 'string'
-  })
-})
-.help()
-.argv;
-
-const config = new Configstore('voca-bau-node-services');
-if (!config.get(`jobs.${argv.jobsConfigName}`)) {
-  yargs.showHelp();
+const config = new Conf({
+  cwd: '/voca-bau-node-services',
+  watch: true
+});
+if (!config.get('configs.project-update')) {
   return;
 }
+
+let job_logger = { ...config.get('server.logger'), ...config.get('configs.project-update.logger') };
+if (!path.isAbsolute(job_logger.dirname || '')) {
+  if (path.isAbsolute(config.get('server.logger.dirname') || '')) {
+    job_logger.dirname = path.join(config.get('server.logger.dirname'), config.get('configs.project-update.logger.dirname') || '');  
+  }
+  else {
+    job_logger.dirname = path.join(path.dirname(config.path), config.get('server.logger.dirname') || '', config.get('configs.project-update.logger.dirname') || '');
+  }
+}
+
+console.log(job_logger.dirname);
 
 const { combine, timestamp, label, printf } = format;
 const logFormat = printf(({ level, message, timestamp }) => {
@@ -36,20 +38,17 @@ const logger = createLogger({
     logFormat
   ),
   transports: [
-    new transports.DailyRotateFile({...config.get('server.logger'), ...config.get(`jobs.${argv.jobsConfigName}.logger`) })
+    new transports.DailyRotateFile(job_logger)
   ]
 });
 
-var projectsDir = config.get(`jobs.${argv.jobsConfigName}.projectsDir`);
-if (!path.isAbsolute(projectsDir)) {
-  projectsDir = path.join(dir, projectsDir);
-}
-if (!fs.existsSync(projectsDir)) {
-  logger.error(`projects directory does not exist: ${projectsDir}`);
+var projectsDir = config.get('configs.project-update.projectsDir');
+if (!path.isAbsolute(projectsDir) || !fs.existsSync(projectsDir)) {
+  logger.error(`projects directory invalid: ${projectsDir}`);
   return;
 }
 
-let base_url = config.get(`jobs.${argv.jobsConfigName}.url`);
+let base_url = config.get('configs.project-update.url');
 if (!base_url) {
   logger.error(`database url does not exist: ${base_url}`);
   return;
