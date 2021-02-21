@@ -26,8 +26,6 @@ if (!path.isAbsolute(job_logger.dirname || '')) {
   }
 }
 
-console.log(job_logger.dirname);
-
 const { combine, timestamp, label, printf } = format;
 const logFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} ${level}: ${message}`;

@@ -12,20 +12,28 @@
       "filename": "server-%DATE%.log",
       "maxFiles": "14d"
     },
-    "jobs": [
-      {
-        "name": "project-update",
-        "cron": "* * * * *"
-      }
-    ]
+    "jobs": [{
+      "name": "project-update",
+      "cron": "* * * * *"
+    }, {
+      "name": "import-pictures",
+      "cron": "* * * * *"
+    }]
   },
-	"configs": {
-		"project-update": {
-			"logger": {
-				"filename": "project-update-%DATE%.log"
+  "configs": {
+    "project-update": {
+      "logger": {
+        "filename": "project-update-%DATE%.log"
       },
       "projectsDir": "<path_to_plv_and onlv_files>",
       "url": "http://<host_username>:<host_password>@<host_domain>"
-		}
-	}
+    },
+    "import-pictures": {
+      "logger": {
+        "filename": "import-pictures-%DATE%.log"
+      },
+      "projectsDir": "<path_to_plv_and onlv_files>",
+      "url": "http://<host_username>:<host_password>@<host_domain>"
+    }
+  }
 }
