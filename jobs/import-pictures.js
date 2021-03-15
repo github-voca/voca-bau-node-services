@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Conf = require('conf');
 const http = require('http');
+const https = require('https');
 const _ = require('lodash');
 const xml2js = require('xml2js');
 const querystring = require('querystring');
@@ -99,7 +100,8 @@ const http_request = function(path, method = null, params = null) {
   }
 
   return new Promise((resolve, reject) => {
-    let request = http.request(http_options, (response) => {
+    let protocol = http_options.protocol.match(/^https/i) == 'https' ? https : http;
+    let request = protocol.request(http_options, (response) => {
       try {
         const { statusCode } = response;
         if (statusCode !== 200) throw new Error(`request failed with status code: ${statusCode}`);

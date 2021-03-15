@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Conf = require('conf');
 const http = require('http');
+const https = require('https');
 const _ = require('lodash');
 const xml2js = require('xml2js');
 const querystring = require('querystring');
@@ -99,7 +100,8 @@ const http_request = function(path, method = null, params = null) {
   }
 
   return new Promise((resolve, reject) => {
-    let request = http.request(http_options, (response) => {
+    let protocol = http_options.protocol.match(/^https/i) ? https : http;
+    let request = protocol.request(http_options, (response) => {
       const { statusCode } = response;
       const contentType = response.headers['content-type'];
     
@@ -107,7 +109,7 @@ const http_request = function(path, method = null, params = null) {
       if (statusCode !== 200) {
         error = new Error('Request Failed.\n' +
                           `Status Code: ${statusCode}`);
-      } else if (!/^application\/json/.test(contentType)) {
+      } else if (!contentType.match(/^application\/json/i)) {
         error = new Error('Invalid content-type.\n' +
                           `Expected application/json but received ${contentType}`);
       }

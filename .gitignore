@@ -2,3 +2,4 @@
 /daemon
 /logs
 /node_modules
+test*
