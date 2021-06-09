@@ -148,12 +148,14 @@ const http_request = function(path, method = null, params = null) {
 let main = async function() {
   try {
     logger.log('verbose', 'load customers and projects from database...');
-    let [ customers_response, projects_response ] = await Promise.all([
+    let [ customers_response, projects_response, projectfolders_response ] = await Promise.all([
       http_request('php/db.php/customers'),
-      http_request('php/db.php/projects')
+      http_request('php/db.php/projects'),
+      http_request('php/db.php/projectfolders')
     ]);
     customers = customers_response.root;
     projects = projects_response.root;
+    projectfolders = projectfolders_response.root;
 
     logger.log('debug', 'create helper functions...');
     let defaultCustomer = customers.find(customer => customer.type == '1');
@@ -169,18 +171,25 @@ let main = async function() {
       return { customer: customer, name: name };
     };
 
+    let getProjectFolderByFile = function(file) {
+      let name = new RegExp('^' + file.split(path.sep).slice(-2)[0] + '$', 'i');
+      return projectfolders.find(projectfolder => projectfolder.name.match(name));
+    }
+
     logger.log('debug', 'create checkPLV promise...');
     let checkPLV = async function(file) {
       let stats = fs.statSync(file);
       let content = fs.readFileSync(file, 'latin1');
 
       let { customer, name } = getCustomerByName(content.slice(1152,1195).toString().trim());
+      let projectfolder = getProjectFolderByFile(file);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
       return {
         name: name,
         active: '1',
         customer: customer.id,
+        projectfolder: projectfolder.id,
         filename: file,
         filesize: '' + stats.size,
         filedate: filedate[1] + ' ' + filedate[2],
@@ -191,7 +200,16 @@ let main = async function() {
     };
 
     logger.log('debug', 'check all PLV-files...')
-    let filesPLV = fs.readdirSync(projectsDir).filter(file => file.toUpperCase().endsWith('.PLV')).map(file => path.join(projectsDir, file));
+    let filesPLV = [];
+    projectfolders.forEach(projectfolder => {
+      let folder = path.join(projectsDir, projectfolder.name);
+      if (fs.existsSync(folder)) {
+        filesPLV = filesPLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.PLV')).map(file => path.join(projectsDir, projectfolder.name, file)));
+      }
+      else {
+        logger.info(`check PLV-files in folder ${folder} failed (not exists)`);
+      }
+    });
     let checkedPLV = await Promise.all(filesPLV.map(file => checkPLV(file)));
 
     logger.log('debug', 'create checkONLV promise...');
@@ -219,12 +237,14 @@ let main = async function() {
       onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
 
       let { customer, name } = getCustomerByName(onlv_vorhaben);
+      let projectfolder = getProjectFolderByFile(file);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
       return {
         name: name,
         active: '1',
         customer: customer.id,
+        projectfolder: projectfolder.id,
         filename: file,
         filesize: '' + stats.size,
         filedate: filedate[1] + ' ' + filedate[2],
@@ -235,7 +255,16 @@ let main = async function() {
     };
 
     logger.log('debug', 'check all ONLV-files...')
-    let filesONLV = fs.readdirSync(projectsDir).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(projectsDir, file));
+    let filesONLV = [];
+    projectfolders.forEach(projectfolder => {
+      let folder = path.join(projectsDir, projectfolder.name);
+      if (fs.existsSync(folder)) {
+        fileONLV = filesONLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(projectsDir, projectfolder.name, file)));
+      }
+      else {
+        logger.info(`check ONLV-files in folder ${folder} failed (not exists)`);
+      }
+    });
     let checkedONLV = await Promise.all(filesONLV.map(file => checkONLV(file)));
 
     logger.log('debug', 'update projects...');

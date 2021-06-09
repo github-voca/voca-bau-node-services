@@ -100,7 +100,7 @@ const http_request = function(path, method = null, params = null) {
   }
 
   return new Promise((resolve, reject) => {
-    let protocol = http_options.protocol.match(/^https/i) == 'https' ? https : http;
+    let protocol = http_options.protocol.match(/^https/i) ? https : http;
     let request = protocol.request(http_options, (response) => {
       try {
         const { statusCode } = response;
@@ -156,7 +156,7 @@ let main = async function() {
     let importPictureFile = async function(record) {
       let extname = path.extname(record.projectfilename);
       let basename = path.basename(record.projectfilename, extname);
-      let dirname = path.join(projectsDir, basename + (extname.match(/\.plv/i) ? '.bsdocs' : '.BSDOCS'));
+      let dirname = path.join(projectsDir, record.projectfolder, basename + (extname.match(/\.plv/i) ? '.bsdocs' : '.BSDOCS'));
       if (!fs.existsSync(dirname)) throw new Error(`project directory ${dirname} does not exist`);
 
       let importdir = path.join(dirname, 'Photo');
