@@ -7,6 +7,7 @@ const _ = require('lodash');
 const xml2js = require('xml2js');
 const querystring = require('querystring');
 const { createLogger, format, transports } = require('winston');
+const { check } = require('yargs');
 require('winston-daily-rotate-file');
 
 const config = new Conf({
@@ -183,6 +184,7 @@ let main = async function() {
 
       let { customer, name } = getCustomerByName(content.slice(1152,1195).toString().trim());
       let projectfolder = getProjectFolderByFile(file);
+
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
       return {
@@ -204,7 +206,7 @@ let main = async function() {
     projectfolders.forEach(projectfolder => {
       let folder = path.join(projectsDir, projectfolder.name);
       if (fs.existsSync(folder)) {
-        filesPLV = filesPLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.PLV')).map(file => path.join(projectsDir, projectfolder.name, file)));
+        filesPLV = filesPLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.PLV')).map(file => path.join(folder, file)));
       }
       else {
         logger.info(`check PLV-files in folder ${folder} failed (not exists)`);
@@ -259,14 +261,14 @@ let main = async function() {
     projectfolders.forEach(projectfolder => {
       let folder = path.join(projectsDir, projectfolder.name);
       if (fs.existsSync(folder)) {
-        fileONLV = filesONLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(projectsDir, projectfolder.name, file)));
+        filesONLV = filesONLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(folder, file)));
       }
       else {
         logger.info(`check ONLV-files in folder ${folder} failed (not exists)`);
       }
     });
     let checkedONLV = await Promise.all(filesONLV.map(file => checkONLV(file)));
-
+    
     logger.log('debug', 'update projects...');
     let pinsert = pupdate = pdelete = 0;
     let requests = [];
