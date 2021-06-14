@@ -142,7 +142,7 @@ const http_request = function(path, method = null, params = null) {
       request.write(post_data);
     }
     request.end();
-  })
+  });
 };
 
 // main method
@@ -182,7 +182,10 @@ let main = async function() {
       let stats = fs.statSync(file);
       let content = fs.readFileSync(file, 'latin1');
 
-      let { customer, name } = getCustomerByName(content.slice(1152,1195).toString().trim());
+      let filename = path.basename(file, path.extname(file));
+
+      // let { customer, name } = getCustomerByName(content.slice(1152,1195).toString().trim());
+      let { customer, name } = getCustomerByName(filename);
       let projectfolder = getProjectFolderByFile(file);
 
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
@@ -222,6 +225,8 @@ let main = async function() {
       let parser = new xml2js.Parser();
       let result = await parser.parseStringPromise(content);
 
+      let filename = path.basename(file, path.extname(file));
+
       let onlv = Object.keys(result).find(key => key.match(/^.*onlv$/i));
       if (!onlv) throw new Error(`ONLV-file ${file} has no valid onlv-tag`);
       let onlv_lv = Object.keys(result[onlv]).find(key => key.match(/^.*\-lv$/i));
@@ -230,7 +235,7 @@ let main = async function() {
       if (!onlv_kenndaten) throw new Error(`ONLV-file ${file} has no valid kenndaten-tag`);
 
       let onlv_vorhaben = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*vorhaben$/i));
-      onlv_vorhaben = onlv_vorhaben ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_vorhaben].join() : file;
+      onlv_vorhaben = onlv_vorhaben ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_vorhaben].join() : '';
 
       let onlv_lvbezeichnung = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvbezeichnung$/i));
       onlv_lvbezeichnung = onlv_lvbezeichnung ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvbezeichnung].join() : '';
@@ -238,7 +243,7 @@ let main = async function() {
       let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
       onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
 
-      let { customer, name } = getCustomerByName(onlv_vorhaben);
+      let { customer, name } = getCustomerByName(filename);
       let projectfolder = getProjectFolderByFile(file);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
@@ -307,7 +312,12 @@ let main = async function() {
       }
     });
     
-    let responses = await Promise.all(requests.map(request => http_request('php/db.php/projects', request.method, request.params)));
+    // let responses = await Promise.all(requests.map(request => http_request('php/db.php/projects', request.method, request.params)));
+    // max. 10 concurrent connections
+    let maxcon = 10;
+    for (let i = 0; i < requests.length; i += maxcon) {
+      await Promise.all(requests.slice(i, i + maxcon).map(request => http_request('php/db.php/projects', request.method, request.params)));
+    }
 
     if (pinsert || pupdate || pdelete) {
       logger.info(`project-update: ${pinsert} new projects, ${pupdate} changed projects and ${pdelete} finished projects`);
