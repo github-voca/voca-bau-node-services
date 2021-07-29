@@ -161,10 +161,13 @@ let main = async function() {
     logger.log('debug', 'create helper functions...');
     let defaultCustomer = customers.find(customer => customer.type == '1');
 
-    let getCustomerByName = function(name) {
-      let customer = customers.find(customer => name.match(new RegExp('^' + customer.name, 'i')));
+    let getCustomerByFile = function(file) {
+      file = file.split(path.sep).slice(-2).join(path.sep);
+      let name = path.basename(file, path.extname(file));
+      let customer = customers.find(customer => (customer.type != 1) && (file.match(new RegExp(customer.description, 'i'))));
+
       if (customer) {
-        name = name.match(new RegExp('^' + customer.name + '[^\\w]*(.*)$', 'i'))[1];
+        name = file.match(new RegExp(customer.description, 'i'))[1] || name;
       }
       else {
         customer = defaultCustomer;
@@ -182,10 +185,7 @@ let main = async function() {
       let stats = fs.statSync(file);
       let content = fs.readFileSync(file, 'latin1');
 
-      let filename = path.basename(file, path.extname(file));
-
-      // let { customer, name } = getCustomerByName(content.slice(1152,1195).toString().trim());
-      let { customer, name } = getCustomerByName(filename);
+      let { customer, name } = getCustomerByFile(file);
       let projectfolder = getProjectFolderByFile(file);
 
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
@@ -225,8 +225,6 @@ let main = async function() {
       let parser = new xml2js.Parser();
       let result = await parser.parseStringPromise(content);
 
-      let filename = path.basename(file, path.extname(file));
-
       let onlv = Object.keys(result).find(key => key.match(/^.*onlv$/i));
       if (!onlv) throw new Error(`ONLV-file ${file} has no valid onlv-tag`);
       let onlv_lv = Object.keys(result[onlv]).find(key => key.match(/^.*\-lv$/i));
@@ -243,7 +241,7 @@ let main = async function() {
       let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
       onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
 
-      let { customer, name } = getCustomerByName(filename);
+      let { customer, name } = getCustomerByFile(file);
       let projectfolder = getProjectFolderByFile(file);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
