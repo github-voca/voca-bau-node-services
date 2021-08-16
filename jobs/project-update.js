@@ -164,7 +164,7 @@ let main = async function() {
     let getCustomerByFile = function(file) {
       file = file.split(path.sep).slice(-2).join(path.sep);
       let name = path.basename(file, path.extname(file));
-      let customer = customers.find(customer => (customer.type != 1) && (file.match(new RegExp(customer.description, 'i'))));
+      let customer = customers.find(customer => (customer.type != '1') && (file.match(new RegExp(customer.description, 'i'))));
 
       if (customer) {
         name = file.match(new RegExp(customer.description, 'i'))[1] || name;
