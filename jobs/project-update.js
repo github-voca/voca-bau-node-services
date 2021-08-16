@@ -184,8 +184,12 @@ let main = async function() {
     let checkPLV = async function(file) {
       let stats = fs.statSync(file);
       let content = fs.readFileSync(file, 'latin1');
+      
+      let plv_lvbezeichnung = content.slice(439,482).toString().trim();
+      let plv_vorhaben = content.slice(396,439).toString().trim();
+      let plv_lvcode = content.slice(482,497).toString().trim();
 
-      let { customer, name } = getCustomerByFile(file);
+      let { customer, name } = getCustomerByFile(file + '|' + plv_vorhaben);
       let projectfolder = getProjectFolderByFile(file);
 
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
@@ -198,9 +202,9 @@ let main = async function() {
         filename: file,
         filesize: '' + stats.size,
         filedate: filedate[1] + ' ' + filedate[2],
-        description: content.slice(439,482).toString().trim(),
-        address: content.slice(396,439).toString().trim(),
-        type: content.slice(482,497).toString().trim()
+        description: plv_lvbezeichnung,
+        address: plv_vorhaben,
+        type: plv_lvcode
       };
     };
 
@@ -241,7 +245,7 @@ let main = async function() {
       let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
       onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
 
-      let { customer, name } = getCustomerByFile(file);
+      let { customer, name } = getCustomerByFile(file + '|' + onlv_vorhaben);
       let projectfolder = getProjectFolderByFile(file);
       let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
