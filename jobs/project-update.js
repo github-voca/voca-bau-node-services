@@ -221,65 +221,65 @@ let main = async function() {
     });
     let checkedPLV = await Promise.all(filesPLV.map(file => checkPLV(file)));
 
-    logger.log('debug', 'create checkONLV promise...');
-    let checkONLV = async function(file) {
-      let stats = fs.statSync(file);
-      let content = fs.readFileSync(file, 'utf8');
+    // logger.log('debug', 'create checkONLV promise...');
+    // let checkONLV = async function(file) {
+    //   let stats = fs.statSync(file);
+    //   let content = fs.readFileSync(file, 'utf8');
   
-      let parser = new xml2js.Parser();
-      let result = await parser.parseStringPromise(content);
+    //   let parser = new xml2js.Parser();
+    //   let result = await parser.parseStringPromise(content);
 
-      let onlv = Object.keys(result).find(key => key.match(/^.*onlv$/i));
-      if (!onlv) throw new Error(`ONLV-file ${file} has no valid onlv-tag`);
-      let onlv_lv = Object.keys(result[onlv]).find(key => key.match(/^.*\-lv$/i));
-      if (!onlv_lv) throw new Error(`ONLV-file ${file} has no valid ...-lv-tag`);
-      let onlv_kenndaten = Object.keys(result[onlv][onlv_lv][0]).find(key => key.match(/^.*kenndaten$/i));
-      if (!onlv_kenndaten) throw new Error(`ONLV-file ${file} has no valid kenndaten-tag`);
+    //   let onlv = Object.keys(result).find(key => key.match(/^.*onlv$/i));
+    //   if (!onlv) throw new Error(`ONLV-file ${file} has no valid onlv-tag`);
+    //   let onlv_lv = Object.keys(result[onlv]).find(key => key.match(/^.*\-lv$/i));
+    //   if (!onlv_lv) throw new Error(`ONLV-file ${file} has no valid ...-lv-tag`);
+    //   let onlv_kenndaten = Object.keys(result[onlv][onlv_lv][0]).find(key => key.match(/^.*kenndaten$/i));
+    //   if (!onlv_kenndaten) throw new Error(`ONLV-file ${file} has no valid kenndaten-tag`);
 
-      let onlv_vorhaben = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*vorhaben$/i));
-      onlv_vorhaben = onlv_vorhaben ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_vorhaben].join() : '';
+    //   let onlv_vorhaben = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*vorhaben$/i));
+    //   onlv_vorhaben = onlv_vorhaben ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_vorhaben].join() : '';
 
-      let onlv_lvbezeichnung = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvbezeichnung$/i));
-      onlv_lvbezeichnung = onlv_lvbezeichnung ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvbezeichnung].join() : '';
+    //   let onlv_lvbezeichnung = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvbezeichnung$/i));
+    //   onlv_lvbezeichnung = onlv_lvbezeichnung ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvbezeichnung].join() : '';
 
-      let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
-      onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
+    //   let onlv_lvcode = Object.keys(result[onlv][onlv_lv][0][onlv_kenndaten][0]).find(key => key.match(/^.*lvcode$/i));
+    //   onlv_lvcode = onlv_lvcode ? result[onlv][onlv_lv][0][onlv_kenndaten][0][onlv_lvcode].join() : '';
 
-      let { customer, name } = getCustomerByFile(file + '|' + onlv_vorhaben);
-      let projectfolder = getProjectFolderByFile(file);
-      let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
+    //   let { customer, name } = getCustomerByFile(file + '|' + onlv_vorhaben);
+    //   let projectfolder = getProjectFolderByFile(file);
+    //   let filedate = stats.mtime.toJSON().match(/^([^T]*)T([^\.]*)\..*/);
 
-      return {
-        name: name,
-        active: '1',
-        customer: customer.id,
-        projectfolder: projectfolder.id,
-        filename: file,
-        filesize: '' + stats.size,
-        filedate: filedate[1] + ' ' + filedate[2],
-        description: onlv_lvbezeichnung,
-        address: onlv_vorhaben,
-        type: onlv_lvcode
-      }
-    };
+    //   return {
+    //     name: name,
+    //     active: '1',
+    //     customer: customer.id,
+    //     projectfolder: projectfolder.id,
+    //     filename: file,
+    //     filesize: '' + stats.size,
+    //     filedate: filedate[1] + ' ' + filedate[2],
+    //     description: onlv_lvbezeichnung,
+    //     address: onlv_vorhaben,
+    //     type: onlv_lvcode
+    //   }
+    // };
 
-    logger.log('debug', 'check all ONLV-files...')
-    let filesONLV = [];
-    projectfolders.forEach(projectfolder => {
-      let folder = path.join(projectsDir, projectfolder.name);
-      if (fs.existsSync(folder)) {
-        filesONLV = filesONLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(folder, file)));
-      }
-      else {
-        logger.info(`check ONLV-files in folder ${folder} failed (not exists)`);
-      }
-    });
-    let checkedONLV = await Promise.all(filesONLV.map(file => checkONLV(file)));
+    // logger.log('debug', 'check all ONLV-files...')
+    // let filesONLV = [];
+    // projectfolders.forEach(projectfolder => {
+    //   let folder = path.join(projectsDir, projectfolder.name);
+    //   if (fs.existsSync(folder)) {
+    //     filesONLV = filesONLV.concat(fs.readdirSync(folder).filter(file => file.toUpperCase().endsWith('.ONLV')).map(file => path.join(folder, file)));
+    //   }
+    //   else {
+    //     logger.info(`check ONLV-files in folder ${folder} failed (not exists)`);
+    //   }
+    // });
+    // let checkedONLV = await Promise.all(filesONLV.map(file => checkONLV(file)));
     
     logger.log('debug', 'update projects...');
     let pinsert = pupdate = pdelete = 0;
     let requests = [];
-    let checked = checkedPLV.concat(checkedONLV);
+    let checked = checkedPLV; // .concat(checkedONLV);
     checked.forEach(params => {
       let project = projects ? projects.find(project => project.filename == params.filename) : null;
       let method = null;
