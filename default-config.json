@@ -18,6 +18,9 @@
     }, {
       "name": "import-pictures",
       "cron": "* * * * *"
+    }, {
+      "name": "notifications",
+      "cron": "* * * * *"
     }]
   },
   "configs": {
@@ -33,6 +36,12 @@
         "filename": "import-pictures-%DATE%.log"
       },
       "projectsDir": "<path_to_plv_and onlv_files>",
+      "url": "http://<host_username>:<host_password>@<host_domain>"
+    },
+    "notifications": {
+      "logger": {
+        "filename": "notifications-%DATE%.log"
+      },
       "url": "http://<host_username>:<host_password>@<host_domain>"
     }
   }
