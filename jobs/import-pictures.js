@@ -47,6 +47,12 @@ if (!path.isAbsolute(projectsDir) || !fs.existsSync(projectsDir)) {
   return;
 }
 
+var notAssignableDir = config.get('configs.import-pictures.notAssignableDir');
+if (!path.isAbsolute(notAssignableDir) || !fs.existsSync(notAssignableDir)) {
+  logger.error(`not-assignable directory invalid: ${notAssignableDir}`);
+  return;
+}
+
 let base_url = config.get('configs.import-pictures.url');
 if (!base_url) {
   logger.error(`database url does not exist: ${base_url}`);
@@ -157,7 +163,11 @@ let main = async function() {
       let extname = path.extname(record.projectfilename);
       let basename = path.basename(record.projectfilename, extname);
       let dirname = path.join(projectsDir, record.projectfolder, basename + (extname.match(/\.plv/i) ? '.bsdocs' : '.BSDOCS'));
-      if (!fs.existsSync(dirname)) throw new Error(`project directory ${dirname} does not exist`);
+      if (!fs.existsSync(dirname)) {
+        logger.log('debug', 'record not-assignable: ' + JSON.stringify(record));
+        dirname = path.join(notAssignableDir, record.projectfolder, basename + (extname.match(/\.plv/i) ? '.bsdocs' : '.BSDOCS'));
+        if (!fs.existsSync(dirname)) throw new Error(`project directory ${dirname} does not exist`);
+      }
 
       let importdir = path.join(dirname, 'Photo');
       if (!fs.existsSync(importdir)) importdir = path.join(dirname, 'Photos');
