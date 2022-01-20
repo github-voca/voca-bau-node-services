@@ -166,7 +166,7 @@ let main = async function() {
       if (!fs.existsSync(dirname)) {
         logger.log('debug', 'record not-assignable: ' + JSON.stringify(record));
         dirname = path.join(notAssignableDir, record.projectfolder, basename + (extname.match(/\.plv/i) ? '.bsdocs' : '.BSDOCS'));
-        if (!fs.existsSync(dirname)) throw new Error(`project directory ${dirname} does not exist`);
+        if (!fs.existsSync(dirname)) fs.mkdirSync(dirname, { recursive: true });
       }
 
       let importdir = path.join(dirname, 'Photo');
