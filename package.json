@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wauzig73/voca-bau-node-services.git"
+    "url": "git+https://github.com/github-voca/voca-bau-node-services.git"
   },
   "main": "service.js",
   "bin": "./service.js",
@@ -15,9 +15,9 @@
     "node-services"
   ],
   "bugs": {
-    "url": "https://github.com/wauzig73/voca-bau-node-services/issues"
+    "url": "https://github.com/github-voca/voca-bau-node-services/issues"
   },
-  "homepage": "https://github.com/wauzig73/voca-bau-node-services#readme",
+  "homepage": "https://github.com/github-voca/voca-bau-node-services#readme",
   "scripts": {
     "install": "node service.js install",
     "uninstall": "node service.js uninstall",
